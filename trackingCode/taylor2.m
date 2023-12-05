@@ -1,14 +1,14 @@
-videoFile = '2023_11_27_day_3_N2_worm_1-11272023135527-0000.avi'; % 视频文件
+videoFile = '2023_09_29_VC657_worm_1-09292023105449-0000.avi'; % 视频文件
 videoReader = VideoReader(videoFile);
-outputVideo = VideoWriter('outputVideo4.mp4', 'MPEG-4');
-% open(outputVideo);
+outputVideo = VideoWriter('outputVideo5.mp4', 'MPEG-4');
+open(outputVideo);
 frameCounter = 1;
 radius = 45;
 
 maxBrightness = zeros(videoReader.NumFrames, 1);
 maxDifference = zeros(videoReader.NumFrames, 1);
 velocity = zeros(videoReader.NumFrames, 1);
-timeShift = 45;
+timeShift = 30;
 
 % 设置缩放比例
 scaleFactor = 2; % 2倍放大
@@ -17,6 +17,8 @@ previousX = NaN;
 previousY = NaN;
 previousTime = NaN;
 previousFrame = NaN;
+
+centerX = 0; centerY = 0; 
 
 while hasFrame(videoReader) && frameCounter + timeShift < videoReader.NumFrames
     frame = readFrame(videoReader);
@@ -92,7 +94,7 @@ while hasFrame(videoReader) && frameCounter + timeShift < videoReader.NumFrames
 %     croppedFrame = differenceFrame(y1:y2, x1:x2, :);
 
     % 在裁剪后的帧上绘制圆圈和文本
-    if maxDifference(frameCounter) >= 20
+    if maxDifference(frameCounter) >= 10
         croppedFrameWithCircle = insertShape(croppedFrame, 'Circle', [centerX - x1, centerY - y1, radius], 'LineWidth', 2, 'Color', 'green');
     else
         croppedFrameWithCircle = insertShape(croppedFrame, 'Circle', [centerX - x1, centerY - y1, radius], 'LineWidth', 2, 'Color', 'red');
@@ -102,6 +104,6 @@ while hasFrame(videoReader) && frameCounter + timeShift < videoReader.NumFrames
     imshow(croppedFrameWithCircle)
 
     % 写入新视频
-    % writeVideo(outputVideo, croppedFrameWithCircle);
+    writeVideo(outputVideo, croppedFrameWithCircle);
 end
 close(outputVideo);
