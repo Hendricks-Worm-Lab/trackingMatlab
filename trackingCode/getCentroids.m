@@ -1,4 +1,8 @@
 function centroidsStruct = getCentroids(videoPath)
+        
+    % find minArea and maxArea
+    [minArea, maxArea] = findccThreshold(videoPath);
+
     [pathstr, name, ext] = fileparts(videoPath);
     [upperPath, ~, ~] = fileparts(pathstr);
     
@@ -33,9 +37,9 @@ function centroidsStruct = getCentroids(videoPath)
         
         % process frames
         videoFrames = im2gray(frame);
-            
+
         % remove small and large connected component
-        minArea = 2000; maxArea = 4400;
+        % minArea = 100; maxArea = 1100;
         bwImg = removeConnectivity(videoFrames, minArea, maxArea);
 
         % compute connected component
