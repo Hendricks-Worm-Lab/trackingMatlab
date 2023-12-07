@@ -76,7 +76,11 @@ for fileIdx = 1:length(rawVideoFiles)
 end
 
 %% Calculate tracks
-tracks = getTracks(centroidsStruct);
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    getTracks(rawVideoFile);
+    fprintf('\n');
+end
 
 %% figure
 g = figure; % 创建一个新图形窗口

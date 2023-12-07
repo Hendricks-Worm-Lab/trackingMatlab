@@ -1,18 +1,44 @@
-function tracks = getTracks(S)
+function tracks = getTracks(videoPath)
+% get the path and name of the input video
+[pathstr, name, ~] = fileparts(videoPath);
+[upperPath, ~, ~] = fileparts(pathstr);    
+       
+% Read the centroids
+centroidsFolder = 'centroids';
+centroidsName = strcat(name,'.mat');
+centroidsPath = fullfile(upperPath, centroidsFolder, centroidsName);
+load(centroidsPath, 'centroidsStruct');
+S = centroidsStruct;
 
-% 假设 S 已经是您的输入结构体
-numFrames = length(S);  % 获取帧数
+% create a VideoWriter object to hold the processed video.
+% Create the full path for the output video
+outputName = strcat(name,'.mat');
+outputFolder = 'tracks';
+outputPath = fullfile(upperPath, outputFolder, outputName);
+
+% Check if path exists
+if ~exist(fullfile(upperPath, outputFolder), 'dir')
+    % Path does not exist, create it
+    mkdir(fullfile(upperPath, outputFolder));
+    fprintf('Created path: %s\n', fullfile(upperPath, outputFolder));
+else
+    % Path already exists
+    fprintf('Path already exists: %s\n', fullfile(upperPath, outputFolder));
+end
+
+% get frame number
+numFrames = length(S);  
 
 % 初始化一个数组来保存轨迹
 tracks = struct('positions', {}, 'frames', {}, 'disappeared', {});
 
 % 设定阈值
-thresholdDistance = 10;  % 例如，50个单位
-minTrackLength = 30;  % 保留长度至少为5帧的轨迹
+thresholdDistance = 10;  % 例如，10个单位
+minTrackLength = 30;  % 保留长度至少为30帧的轨迹
 maxDisappearFrames = 10;  % 允许轨迹消失的最大帧数
 
 % 遍历每一帧  
-for k = 1:min(numFrames-1,2400)
+for k = 1:numFrames-1
     currentTargets = [S(k).CentroidX S(k).CentroidY];
     nextTargets = [S(k+1).CentroidX S(k+1).CentroidY];
     
@@ -55,7 +81,14 @@ for k = 1:min(numFrames-1,2400)
         end
     end
     tracks(removeIdx) = []; % 在循环外移除标记的轨迹
+
+    % use the backspace character to move the cursor back, then update the progress
+    if k>1
+        fprintf(repmat('\b', 1, 26)); % use the backspace character four times to move the cursor back as needed
+    end
+    fprintf('Getting tracks ... %3d/%d', k, numFrames);
 end
+fprintf('\n');
 
 %% move short tracks
 removeIdx = false(1, length(tracks)); % 初始化逻辑索引数组
@@ -65,6 +98,9 @@ for j = 1:length(tracks)
         removeIdx(j) = true; % 标记需要移除的轨迹
     end
 end
-tracks(removeIdx) = []; % 在循环外移除标记的轨迹2
+tracks(removeIdx) = []; % 在循环外移除标记的轨迹
 
+save(outputPath, "tracks");
+
+fprintf('Finished tracking for %s\n', name);
 end
