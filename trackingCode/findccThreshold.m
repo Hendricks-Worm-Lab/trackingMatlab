@@ -1,13 +1,17 @@
-function [minSizeValue, maxSizeValue] = findccThreshold(videoFile)
-
-% % 假设 videoFile 是视频文件的路径
-% videoFile = 'R2WF2.avi';
+function findccThreshold(videoPath)
+% get the path and name of the input video
+[pathstr, name, ~] = fileparts(videoPath);
+[upperPath, ~, ~] = fileparts(pathstr);
 
 % 全局变量声明
 global minSizeValue maxSizeValue guiFigure originalAxes processedAxes minValueText maxValueText v currentFrame frameText;
 
 % 初始化视频读取对象和当前帧数
-v = VideoReader(videoFile);
+% Read the masked video
+backgoundRemovedFolder = 'backgroundRemoved';
+backgoundRemovedName = strcat(name,'.avi');
+backgoundRemovedVideoPath = fullfile(upperPath, backgoundRemovedFolder, backgoundRemovedName);
+v = VideoReader(backgoundRemovedVideoPath);
 currentFrame = 1;
 
 % 初始化全局变量
@@ -29,6 +33,25 @@ uiwait(guiFigure);
 
 % 函数继续执行时获取全局变量的值
 global minSizeValue maxSizeValue;
+
+% create a VideoWriter object to hold the threshold
+% Create the full path for the output
+outputName = strcat(name,'.mat');
+outputFolder = 'ccThreshold';
+outputPath = fullfile(upperPath, outputFolder, outputName);
+
+    % Check if path exists
+    if ~exist(fullfile(upperPath, outputFolder), 'dir')
+        % Path does not exist, create it
+        mkdir(fullfile(upperPath, outputFolder));
+        fprintf('Created path: %s\n', fullfile(upperPath, outputFolder));
+    else
+        % Path already exists
+        fprintf('Path already exists: %s\n', fullfile(upperPath, outputFolder));
+    end
+
+minArea = minSizeValue; maxArea = maxSizeValue;
+save(outputPath, 'minArea', 'maxArea');
 end
 
 function createGUI(frame1)
@@ -131,6 +154,7 @@ function endSelection(~, ~)
     global minSizeValue maxSizeValue;
     disp(['Selected Min Size: ' num2str(minSizeValue)]);
     disp(['Selected Max Size: ' num2str(maxSizeValue)]);
+    fprintf('\n');
 
     % 恢复 findccThreshold 函数的执行
     uiresume(guiFigure);
