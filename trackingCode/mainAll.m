@@ -48,7 +48,11 @@ end
 
 %% average frames (get the background of the video)
 startFrame = 1;
-averageFrame = getBackground(videoFileMasked, startFrame);
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    getBackground(rawVideoFile, startFrame);
+    fprintf('\n');
+end
 
 %% remove the background of the video
 frameRate = 90;
