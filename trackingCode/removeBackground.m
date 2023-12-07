@@ -1,7 +1,7 @@
-function removeBackground(videoPath, frameRate)
+function removeBackground(videoPath, frameRateScaler)
     % deal with option input
-    if nargin < 3 || isempty(frameRate)
-        frameRate = 30; % set 'defaultValue' as your desired default value
+    if nargin < 3 || isempty(frameRateScaler)
+        frameRateScaler = 1; % set 'defaultValue' as your desired default value
     end
     
     % get the path and name of the input video
@@ -35,13 +35,15 @@ function removeBackground(videoPath, frameRate)
         fprintf('Path already exists: %s\n', fullfile(upperPath, outputFolder));
     end
     
-    % Create an output video object
-    outputVid = VideoWriter(outputVideoPath, 'Uncompressed AVI');
-    outputVid.FrameRate = frameRate;
-    open(outputVid);
-    
     % open the video file to prepare for writing the processed video
     vidObj = VideoReader(maskedVideoPath);
+
+    % Create an output video object
+    outputVid = VideoWriter(outputVideoPath, 'Uncompressed AVI');
+    outputVid.FrameRate = vidObj.FrameRate * frameRateScaler;
+    open(outputVid);
+    
+
     
     % add a frame counter
     frameCounter = 0;

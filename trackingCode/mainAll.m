@@ -55,10 +55,10 @@ for fileIdx = 1:length(rawVideoFiles)
 end
 
 %% remove the background of the video
-frameRate = 90;
+frameRateScaler = 1; % change this when you want to speed up or slow down the video
 for fileIdx = 1:length(rawVideoFiles)
     rawVideoFile = string(rawVideoFiles(fileIdx));
-    removeBackground(rawVideoFile, frameRate);
+    removeBackground(rawVideoFile, frameRateScaler);
     fprintf('\n');
 end
 
