@@ -2,86 +2,76 @@ function outputVideoPath = maskVideo(videoPath)
     [pathstr, name, ~] = fileparts(videoPath);
     [upperPath, ~, ~] = fileparts(pathstr);
     
-    % 读取视频文件
-    vidObj = VideoReader(videoPath);
+    % Read the mask
+    maskFolder = 'mask';
+    maskName = strcat(name,'.png');
+    maskVideoPath = fullfile(upperPath, maskFolder, maskName);
+    mask = imread(maskVideoPath);
+
+    % Find all non-zero element row and column indices
+    [rows, cols] = find(mask);
     
-    % 绘制蒙版
-    % 读取第一帧并显示
-    firstFrame = readFrame(vidObj);
+    % Calculate top, bottom, left, and right bounds
+    top = min(rows);
+    bottom = max(rows);
+    left = min(cols);
+    right = max(cols);
 
-    % 创建一个新的figure来显示第一帧
-    figure;
-    imshow(firstFrame);
-    title('Draw a mask and save it');
-
-    % 初始化一个空的蒙版图像
-    mask = false(size(firstFrame, 1), size(firstFrame, 2));
-
-    % 使用交互性工具绘制多个形状蒙版
-    while true
-        % 让用户选择绘制的形状类型
-        choice = menu('Select shape type', 'Rectangle', 'Ellipse', 'Polygon', 'Freehand', 'Finish drawing');
-
-        if choice == 1 % 绘制矩形
-            h = imrect;
-            wait(h);
-            mask = mask | createMask(h);
-        elseif choice == 2 % 绘制椭圆
-            h = imellipse;
-            wait(h);
-            mask = mask | createMask(h);
-        elseif choice == 3 % 绘制多边形
-            h = impoly;
-            wait(h);
-            mask = mask | createMask(h);
-        elseif choice == 4 % 自由绘制
-            h = imfreehand;
-            wait(h);
-            mask = mask | createMask(h);
-        elseif choice == 5 % 完成绘制
-            break;
-        end
-    end
-
-    % 关闭figure
-    close;
+    % cropped mask
+    mask_cropped = mask(top:bottom, left:right);
     
-    % 创建输出视频的完整路径
+    % Create the full path for the output video
     outputName = strcat(name,'.avi');
-    outputVideoPath = fullfile(upperPath, 'masked', outputName);
+    outputFolder = 'masked';
+    outputVideoPath = fullfile(upperPath, outputFolder, outputName);
+
+    % Check if path exists
+    if ~exist(fullfile(upperPath, outputFolder), 'dir')
+        % Path does not exist, create it
+        mkdir(fullfile(upperPath, outputFolder));
+        fprintf('Created path: %s\n', fullfile(upperPath, outputFolder));
+    else
+        % Path already exists
+        fprintf('Path already exists: %s\n', fullfile(upperPath, outputFolder));
+    end
     
-    % 创建一个输出视频对象
+    % open video file
+    vidObj = VideoReader(videoPath);
+
+    % Create an output video object
     outputVid = VideoWriter(outputVideoPath, 'Uncompressed AVI');
     outputVid.FrameRate = vidObj.FrameRate;
     open(outputVid);
 
-    
-    % 添加一个帧计数器
+    % Add a frame counter
     frameCounter = 0;
 
-    % 循环遍历视频中的每一帧
+    % Loop through each frame in the video
     while hasFrame(vidObj)
         currentFrame = readFrame(vidObj);
 
-        % 累计帧计数器
+        % Accumulate frame counter
         frameCounter = frameCounter + 1;
         
-        % 蒙版
-        img_masked = currentFrame;
-        img_masked(repmat(~mask, [1 1 3])) = 0;
+        % Mask
+        img_masked = currentFrame(top:bottom, left:right);
+        img_masked(repmat(~mask_cropped, [1 1 3])) = 0;
         
-        % 写入输出视频
+        % Write to the output video
         writeVideo(outputVid, img_masked);
         close;
 
-        % 使用退格字符回退光标位置，然后更新进度
-        fprintf(repmat('\b', 1, 20)); % 根据需要回退光标，这里是4次
+        % Use the backspace character to move the cursor back, then update progress
+        if frameCounter>1
+            fprintf(repmat('\b', 1, 20)); % Move the cursor back as needed, here it's 4 times
+        end
         fprintf('masking video...%3d%%', round((frameCounter/vidObj.NumFrames)*100));
     end
-    
     fprintf('\n');
 
-    % 关闭输出视频文件
+    % Close the output video file
     close(outputVid);
+
+    fprintf('Finished mask video for %s\n', name);
 
 end
