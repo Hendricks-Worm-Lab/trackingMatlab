@@ -56,7 +56,11 @@ end
 
 %% remove the background of the video
 frameRate = 90;
-videoFileTransparent = transparentVideo(videoFileMasked, averageFrame, frameRate);
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    removeBackground(rawVideoFile, frameRate);
+    fprintf('\n');
+end
 
 %% get centroids
 centroidsStruct = getCentroids(videoFileTransparent);
