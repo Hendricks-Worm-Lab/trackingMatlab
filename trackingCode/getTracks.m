@@ -84,9 +84,9 @@ for k = 1:numFrames-1
 
     % use the backspace character to move the cursor back, then update the progress
     if k>1
-        fprintf(repmat('\b', 1, 26)); % use the backspace character four times to move the cursor back as needed
+        fprintf(repmat('\b', 1, 28)); % use the backspace character four times to move the cursor back as needed
     end
-    fprintf('Getting tracks ... %3d/%d', k, numFrames);
+    fprintf('Getting tracks ... %4d/%4d', k, numFrames);
 end
 fprintf('\n');
 

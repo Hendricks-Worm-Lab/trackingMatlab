@@ -82,6 +82,13 @@ for fileIdx = 1:length(rawVideoFiles)
     fprintf('\n');
 end
 
+%% Get head lifting
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    getHeadLifting(rawVideoFile);
+    fprintf('\n');
+end
+
 %% figure
 g = figure; % 创建一个新图形窗口
 hold on; % 保持当前图形，这样新添加的线条或点不会擦除旧的内容
