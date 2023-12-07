@@ -1,29 +1,46 @@
-function centroidsStruct = getCentroids(videoPath)
-        
-    % find minArea and maxArea
-    [minArea, maxArea] = findccThreshold(videoPath);
-
-    [pathstr, name, ext] = fileparts(videoPath);
+function getCentroids(videoPath)
+    % get the path and name of the input video
+    [pathstr, name, ~] = fileparts(videoPath);
     [upperPath, ~, ~] = fileparts(pathstr);
     
-    outputName = strcat(name, ext);
-    outputVideoPath = fullfile(upperPath, 'centroids', outputName);
-    
-    % read video
-    vidObj = VideoReader(videoPath);
-    
-    % obtain video information
-    videoWidth = vidObj.Width;
-    videoHeight = vidObj.Height;
-    frameRate = vidObj.FrameRate;
+    % Read the ccThreshold
+    ccThresholdFolder = 'ccThreshold';
+    ccThresholdName = strcat(name,'.mat');
+    ccThresholdPath = fullfile(upperPath, ccThresholdFolder, ccThresholdName);
+    load(ccThresholdPath, 'minArea', 'maxArea')
 
-    % 创建一个输出视频对象
+    % Read the masked video
+    backgoundRemovedFolder = 'backgroundRemoved';
+    backgoundRemovedName = strcat(name,'.avi');
+    backgoundRemovedVideoPath = fullfile(upperPath, backgoundRemovedFolder, backgoundRemovedName);
+
+    % read video
+    vidObj = VideoReader(backgoundRemovedVideoPath);
+    
+    % create a VideoWriter object to hold the processed video.
+    % Create the full path for the output video
+    outputName = strcat(name,'.avi'); outputVariableName = strcat(name,'.mat');
+    outputFolder = 'centroids';
+    outputVideoPath = fullfile(upperPath, outputFolder, outputName);
+    outputVariablePath = fullfile(upperPath, outputFolder, outputVariableName);
+
+    % Check if path exists
+    if ~exist(fullfile(upperPath, outputFolder), 'dir')
+        % Path does not exist, create it
+        mkdir(fullfile(upperPath, outputFolder));
+        fprintf('Created path: %s\n', fullfile(upperPath, outputFolder));
+    else
+        % Path already exists
+        fprintf('Path already exists: %s\n', fullfile(upperPath, outputFolder));
+    end
+    
+    % creat a ouptput video object
     outputVid = VideoWriter(outputVideoPath, 'Uncompressed AVI');
-    outputVid.FrameRate = frameRate;
+    outputVid.FrameRate = vidObj.FrameRate;
     open(outputVid);
     
     % initialize a frame counter
-    allFrameCount = 0;
+    frameCounter = 0;
     
     % initialize a structure array to store centroid information
     centroidsStruct = struct([]);
@@ -33,7 +50,7 @@ function centroidsStruct = getCentroids(videoPath)
         frame = readFrame(vidObj);
         
         % increment the frame counter
-        allFrameCount = allFrameCount + 1;
+        frameCounter = frameCounter + 1;
         
         % process frames
         videoFrames = im2gray(frame);
@@ -85,20 +102,25 @@ function centroidsStruct = getCentroids(videoPath)
         end
     
         % store centroid information in a structure
-        centroidsStruct(allFrameCount).CentroidX = centroids(:,1);
-        centroidsStruct(allFrameCount).CentroidY = centroids(:,2);
+        centroidsStruct(frameCounter).CentroidX = centroids(:,1);
+        centroidsStruct(frameCounter).CentroidY = centroids(:,2);
 
-        % 写入输出视频
+        % write intp output video
         writeVideo(outputVid, cImg);
         close;
     
-        % 使用退格字符回退光标位置，然后更新进度
-        fprintf(repmat('\b', 1, 4)); % 根据需要回退光标，这里是4次
-        fprintf('%3d%%', round((allFrameCount/vidObj.NumFrames)*100));
+        % use the backspace character to move the cursor back, then update the progress
+        if frameCounter>1
+            fprintf(repmat('\b', 1, 26)); % use the backspace character four times to move the cursor back as needed
+        end
+        fprintf('Getting centroids ... %3d%%', round((frameCounter/vidObj.NumFrames)*100));
     end
-    
     fprintf('\n');
 
     % 关闭输出视频文件
     close(outputVid);
+
+    save(outputVariablePath, "centroidsStruct");
+
+    fprintf('Finished getting centroids for %s\n', name);
 end

@@ -22,7 +22,7 @@ rawVideoFiles = cell(length(files), 1);
 for k = 1:length(files)
     filename = files(k).name;
     rawVideoFile = fullfile(folderPath, filename);
-    rawVideoFiles{k} = rawVideoFile; % 存储完整路径
+    rawVideoFiles{k} = rawVideoFile; % save full file path
 end
 
 %% mask video
@@ -33,7 +33,7 @@ for fileIdx = 1:length(rawVideoFiles)
     fprintf('\n');
 end
 
-% run this section for draw mask for every video
+% run this for draw mask for every video
 for fileIdx = 1:length(rawVideoFiles)
     rawVideoFile = string(rawVideoFiles(fileIdx));
     drawMask(rawVideoFile);
@@ -63,7 +63,17 @@ for fileIdx = 1:length(rawVideoFiles)
 end
 
 %% get centroids
-centroidsStruct = getCentroids(videoFileTransparent);
+% run this to find threshold for all videos
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    findccThreshold(rawVideoFile);
+end
+
+for fileIdx = 1:length(rawVideoFiles)
+    rawVideoFile = string(rawVideoFiles(fileIdx));
+    getCentroids(rawVideoFile);
+    fprintf('\n');
+end
 
 %% Calculate tracks
 tracks = getTracks(centroidsStruct);
